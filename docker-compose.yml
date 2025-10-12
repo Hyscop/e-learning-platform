@@ -1,0 +1,86 @@
+# DOCKER COMPOSE - Orchestrates all services and dependencies
+# WHY? Single command to run entire platform: docker-compose up
+
+version: "3.8"
+
+services:
+  # ===================================
+  # DATABASE: PostgreSQL for User Service
+  # ===================================
+  postgres:
+    image: postgres:16-alpine # Alpine = smaller image
+    container_name: elearning-postgres
+    environment:
+      POSTGRES_DB: userdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # SECURITY: In production, use Docker secrets, not plain text!
+    ports:
+      - "5432:5432" # Host:Container - access from localhost:5432
+    volumes:
+      # Persist data outside container (survives container restart)
+      - postgres-data:/var/lib/postgresql/data
+      # Init script (create tables on first run) - we'll add later
+      # - ./scripts/init-postgres.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - elearning-network
+    healthcheck:
+      # Docker checks if PostgreSQL is ready
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===================================
+  # USER SERVICE
+  # ===================================
+  user-service:
+    build:
+      context: . # Build from root (needs parent POM)
+      dockerfile: user-service/Dockerfile
+    container_name: elearning-user-service
+    ports:
+      - "8081:8081" # Expose to host machine
+    environment:
+      # Override application.yml settings
+      SPRING_PROFILES_ACTIVE: dev # Use application-dev.yml
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/userdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      # WHY postgres as hostname? Docker Compose creates network, services resolve by name
+    depends_on:
+      postgres:
+        condition: service_healthy # Wait for PostgreSQL to be ready
+        # WHY? Service won't start until DB is healthy
+    networks:
+      - elearning-network
+    restart: unless-stopped # Auto-restart if crashes
+    # Uncomment for live code reload during development
+    # volumes:
+    #   - ./user-service/src:/app/src
+
+# ===================================
+# NETWORKS
+# ===================================
+networks:
+  elearning-network:
+    driver: bridge # Default network type
+    # WHY? Isolates our services, allows inter-service communication
+
+# ===================================
+# VOLUMES
+# ===================================
+volumes:
+  postgres-data:
+    # Named volume - managed by Docker
+    # WHY? Data persists even if container is deleted
+    driver: local
+# ===================================
+# FUTURE SERVICES (commented out)
+# ===================================
+# Add more services as we build them:
+# - api-gateway
+# - course-service (with MongoDB)
+# - redis
+# - rabbitmq
+# - elasticsearch

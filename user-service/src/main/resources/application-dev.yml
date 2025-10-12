@@ -1,0 +1,34 @@
+# DEVELOPMENT ENVIRONMENT CONFIGURATION
+# Activated when: -Dspring.profiles.active=dev
+# WHY separate file? Different settings for local dev vs production
+
+spring:
+  datasource:
+    # Docker container connection (when running with docker-compose)
+    # postgres:5432 resolves via Docker network (service name as hostname)
+    url: jdbc:postgresql://postgres:5432/userdb
+    username: postgres
+    password: postgres
+
+  jpa:
+    # Show SQL in development
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    hibernate:
+      # AUTO-UPDATE schema in development (creates tables automatically)
+      ddl-auto: update
+
+# More verbose logging in development
+logging:
+  level:
+    com.elearning.user: DEBUG
+    org.springframework.security: DEBUG
+
+# Actuator - expose all endpoints in development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*" # All actuator endpoints available

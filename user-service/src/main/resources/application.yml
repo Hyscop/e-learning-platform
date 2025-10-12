@@ -1,0 +1,91 @@
+# USER SERVICE CONFIGURATION
+# WHY YML? More readable than .properties, supports hierarchical structure
+
+spring:
+  application:
+    name: user-service # Service identifier (useful for service discovery later)
+
+  # ACTIVE PROFILE - switch between dev, test, prod
+  # Usage: mvn spring-boot:run -Dspring-boot.run.profiles=dev
+  profiles:
+    active: dev
+
+  # JPA/HIBERNATE CONFIGURATION
+  jpa:
+    # Show SQL in console (learning/debugging - disable in production)
+    show-sql: true
+    properties:
+      hibernate:
+        # Format SQL for readability
+        format_sql: true
+        # Dialect - tells Hibernate we're using PostgreSQL
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    # DDL AUTO - what Hibernate does with database schema
+    # update: creates/updates tables automatically (convenient for development)
+    # validate: only checks if schema matches (production)
+    # create-drop: drops and recreates on each restart (testing)
+    hibernate:
+      ddl-auto: update
+
+  # DATABASE CONNECTION
+  # WHY separate config? Will override in application-dev.yml with Docker values
+  datasource:
+    url: jdbc:postgresql://localhost:5432/userdb
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+    # CONNECTION POOL (HikariCP - fastest Java connection pool)
+    hikari:
+      maximum-pool-size: 10 # Max DB connections
+      minimum-idle: 5 # Minimum idle connections
+      connection-timeout: 20000 # 20 seconds
+      idle-timeout: 300000 # 5 minutes
+
+# SERVER CONFIGURATION
+server:
+  port: 8081 # User Service runs on 8081 (API Gateway will be 8080)
+  servlet:
+    context-path: /api/users # Base path: http://localhost:8081/api/users
+  error:
+    include-message: true # Include error messages in response
+    include-stacktrace: on_param # Stack trace only if ?trace=true
+
+# LOGGING CONFIGURATION
+logging:
+  level:
+    root: INFO # Default log level
+    com.elearning.user: DEBUG # Our code - more verbose
+    org.springframework.web: DEBUG # Spring Web logs
+    org.hibernate.SQL: DEBUG # SQL queries
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE # SQL parameters
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n" # Log format
+  file:
+    name: logs/user-service.log # Log file location
+
+# ACTUATOR ENDPOINTS - Health checks & metrics
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus # Exposed endpoints
+      base-path: /actuator # Access: http://localhost:8081/actuator/health
+  endpoint:
+    health:
+      show-details: always # Show detailed health info
+  health:
+    defaults:
+      enabled: true
+
+# JWT CONFIGURATION - Custom properties for JWT token generation
+jwt:
+  secret: your-secret-key-change-this-in-production-min-256-bits-long-key-for-security
+  # WHY so long? HS256 algorithm requires minimum 256-bit key
+  expiration: 86400000 # 24 hours in milliseconds
+  # SECURITY NOTE: In production, use environment variable, not hardcoded!
+
+# APPLICATION-SPECIFIC PROPERTIES
+app:
+  name: E-Learning User Service
+  version: 1.0.0
