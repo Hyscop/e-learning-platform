@@ -1,6 +1,3 @@
-# USER SERVICE CONFIGURATION
-# WHY YML? More readable than .properties, supports hierarchical structure
-
 spring:
   application:
     name: user-service # Service identifier (useful for service discovery later)
@@ -8,7 +5,7 @@ spring:
   # ACTIVE PROFILE - switch between dev, test, prod
   # Usage: mvn spring-boot:run -Dspring-boot.run.profiles=dev
   profiles:
-    active: dev
+    active: local
 
   # JPA/HIBERNATE CONFIGURATION
   jpa:
@@ -48,7 +45,7 @@ server:
   servlet:
     context-path: /api/users # Base path: http://localhost:8081/api/users
   error:
-    include-message: true # Include error messages in response
+    include-message: always # Include error messages in response
     include-stacktrace: on_param # Stack trace only if ?trace=true
 
 # LOGGING CONFIGURATION
