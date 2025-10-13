@@ -7,6 +7,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.elearning.user.exception.EmailAlreadyExistsException;
+import com.elearning.user.exception.UserNotFoundException;
 import com.elearning.user.model.Role;
 import com.elearning.user.model.User;
 import com.elearning.user.repository.UserRepository;
@@ -32,7 +34,7 @@ public class UserService {
      * 
      * @param user 
      * @return
-     * @throws RuntimeException if email already exists
+     * @throws EmailAlreadyExistsException if email already exists
      */
      public User createUser(User user){
 
@@ -40,8 +42,7 @@ public class UserService {
 
         if(userRepository.existsByEmail(user.getEmail())){
             log.error("Email already exists: {}", user.getEmail());
-            throw new RuntimeException("Email already exists: " + user.getEmail());
-            // TODO Create custom excception EmailAlreadyExistsException
+            throw new EmailAlreadyExistsException(user.getEmail());
         }
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
@@ -165,15 +166,14 @@ public class UserService {
        * @param id
        * @param updatedUser
        * @return Updated User
-       * @throws RuntimeException if user not found
+       * @throws UserNotFoundException if user not found
        */
       public User updateUser(Long id, User updatedUser){
         log.info("Updating user with ID: {}", id);
 
         User existingUser = userRepository.findById(id).orElseThrow(() -> {
             log.error("User not found with ID: {}", id);
-            return new RuntimeException("User not found with ID:" + id);
-            //TODO: Create custom exception UserNotFoundException
+            return new UserNotFoundException(id);
         });
 
         existingUser.setFirstName(updatedUser.getFirstName());
@@ -197,8 +197,7 @@ public class UserService {
         log.info("Updateing password for user ID:{}", id);
         User user = userRepository.findById(id).orElseThrow(() -> {
             log.error("User not found with ID: {}", id);
-            return new RuntimeException("User not found with ID:" + id);
-            //TODO: Create custom exception UserNotFoundException
+            return new UserNotFoundException(id);
         });
 
         String encodedPassword = passwordEncoder.encode(newPassword);
@@ -240,7 +239,7 @@ public class UserService {
         log.warn("Deleteing user with ID: {}", id);
 
         if(!userRepository.existsById(id)){
-            throw new RuntimeException("User not found with ID:" + id);
+            throw new UserNotFoundException(id);
         }
 
         userRepository.deleteById(id);

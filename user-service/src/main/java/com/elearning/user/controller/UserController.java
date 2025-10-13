@@ -3,6 +3,7 @@ package com.elearning.user.controller;
 import com.elearning.user.dto.UserCreateRequest;
 import com.elearning.user.dto.UserRegistrationRequest;
 import com.elearning.user.dto.UserResponse;
+import com.elearning.user.exception.UserNotFoundException;
 import com.elearning.user.model.Role;
 import com.elearning.user.model.User;
 import com.elearning.user.service.UserService;
@@ -188,8 +189,7 @@ public class UserController {
         User user = userService.getUserById(id)
                 .orElseThrow(() -> {
                     log.error("User not found with ID: {}", id);
-                    return new RuntimeException("User not found with ID: " + id);
-                    // TODO: Create custom UserNotFoundException
+                    return new UserNotFoundException(id);
                 });
         
         UserResponse response = new UserResponse(user);
@@ -215,7 +215,7 @@ public class UserController {
         User user = userService.getUserByEmail(email)
                 .orElseThrow(() -> {
                     log.error("User not found with email: {}", email);
-                    return new RuntimeException("User not found with email: " + email);
+                    return new UserNotFoundException("User not found with email: " + email);
                 });
         
         UserResponse response = new UserResponse(user);
