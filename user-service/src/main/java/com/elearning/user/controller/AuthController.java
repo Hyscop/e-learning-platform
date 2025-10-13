@@ -19,10 +19,11 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Authentication Controller
  * 
- * Handles user login and JWT token generation
+ * Handles user authentication and logout
  * 
  * Endpoints:
  * - POST /api/users/auth/login - User login
+ * - POST /api/users/auth/logout - User logout
  */
 @RestController
 @RequestMapping("/auth")
@@ -53,9 +54,7 @@ public class AuthController {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             authRequest.getEmail(),
-                            authRequest.getPassword()
-                    )
-            );
+                            authRequest.getPassword()));
 
             log.info("Authentication successful for: {}", authRequest.getEmail());
 
@@ -83,5 +82,31 @@ public class AuthController {
             log.error("Invalid credentials for email: {}", authRequest.getEmail());
             throw new BadCredentialsException("Invalid email or password");
         }
+    }
+
+    /**
+     * LOGOUT
+     * 
+     * POST /api/users/auth/logout
+     * 
+     * Logs out user (client-side token removal)
+     * 
+     * Note: Since JWT is stateless, actual logout happens on client side
+     * by removing the token. This endpoint is for logging purposes and
+     * future token blacklisting implementation.
+     * 
+     * @return Success message
+     */
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout() {
+        log.info("Logout request received");
+
+        // In JWT stateless architecture, logout is handled client-side
+        // The client should remove the token from storage
+
+        // Future enhancement: Implement token blacklist using Redis
+        // to prevent token reuse before expiration
+
+        return ResponseEntity.ok("Logged out successfully. Please remove the token from client.");
     }
 }

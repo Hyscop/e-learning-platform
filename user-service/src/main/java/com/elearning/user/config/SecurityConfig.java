@@ -49,12 +49,12 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/register",
                                 "/auth/login",
-                                "/actuator/**"
-                        ).permitAll()
-                        
+                                "/auth/logout",
+                                "/actuator/**")
+                        .permitAll()
+
                         // All other endpoints require authentication
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // No sessions
                 )
@@ -97,4 +97,3 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
-
