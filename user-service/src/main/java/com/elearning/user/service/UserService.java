@@ -219,8 +219,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> {
             log.error("User not found with ID: {}", id);
-            return new RuntimeException("User not found with ID:" + id);
-            //TODO: Create custom exception UserNotFoundException
+            return new UserNotFoundException(id);
         });
         
         user.setEnabled(enabled);
