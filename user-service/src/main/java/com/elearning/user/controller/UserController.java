@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  * User Controller - REST API endpoints for user management
  * Endpoints:
  * - POST /register - Public user registration
- * - POST / - Create user (admin)
+ * - POST /create - Create user (admin)
  * - GET / - Get all users
  * - GET /{id} - Get user by ID
  * - GET /email/{email} - Get user by email
@@ -92,7 +92,7 @@ public class UserController {
     /**
      * CREATE USER (Admin only)
      * 
-     * POST /api/users
+     * POST /api/users/create
      * 
      * Request Body:
      * {
@@ -108,7 +108,7 @@ public class UserController {
      * @param request User creation data with role
      * @return Created user
      */
-    @PostMapping
+    @PostMapping("/create")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody UserCreateRequest request) {
