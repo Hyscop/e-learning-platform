@@ -32,6 +32,27 @@ services:
       retries: 5
 
   # ===================================
+  # API GATEWAY
+  # ===================================
+  api-gateway:
+    build:
+      context: . # Build from root (needs parent POM)
+      dockerfile: api-gateway/Dockerfile
+    container_name: elearning-api-gateway
+    ports:
+      - "8080:8080" # Main entry point for all API requests
+    environment:
+      # Route to user service
+      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://user-service:8081
+      # JWT secret (must match user-service)
+      JWT_SECRET: dGhpc2lzYXZlcnlzZWN1cmVzZWNyZXRrZXlmb3Jqd3R0b2tlbmdlbmVyYXRpb25taW5pbXVtMjU2Yml0cw==
+    depends_on:
+      - user-service # Wait for user service to be ready
+    networks:
+      - elearning-network
+    restart: unless-stopped
+
+  # ===================================
   # USER SERVICE
   # ===================================
   user-service:

@@ -5,15 +5,11 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 
-        PARENT POM - Manages dependencies for all microservices
-        WHY? Ensures all services use same Spring Boot version & common libraries
-        Prevents version conflicts between services
-    -->
+  
     
     <groupId>com.elearning</groupId>
     <artifactId>e-learning-platform</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>E-Learning Platform</name>
@@ -22,8 +18,8 @@
     <!-- Child modules (microservices) -->
     <modules>
         <module>user-service</module>
+        <module>api-gateway</module>
         <!-- Add more services here as we create them -->
-        <!-- <module>api-gateway</module> -->
         <!-- <module>course-service</module> -->
     </modules>
 
