@@ -77,7 +77,7 @@ management:
 
 # JWT CONFIGURATION - Custom properties for JWT token generation
 jwt:
-  secret: your-secret-key-change-this-in-production-min-256-bits-long-key-for-security
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
   # WHY so long? HS256 algorithm requires minimum 256-bit key
   expiration: 86400000 # 24 hours in milliseconds
   # SECURITY NOTE: In production, use environment variable, not hardcoded!
