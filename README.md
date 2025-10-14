@@ -135,8 +135,6 @@ e-learning-platform/
 - [x] Role-based authorization (INSTRUCTOR/ADMIN only for create/update/delete)
 - [x] Ownership validation (instructors can only modify own courses)
 - [x] Instructor name denormalization for frontend performance
-- [x] Public browsing endpoints (no authentication required)
-- [x] Global exception handling with SecurityException
 
 ### 🚧 Phase 5: Enrollment Service (IN PROGRESS)
 
