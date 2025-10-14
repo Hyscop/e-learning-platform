@@ -1,6 +1,4 @@
 # DEVELOPMENT ENVIRONMENT CONFIGURATION
-# Activated when: -Dspring.profiles.active=dev
-# WHY separate file? Different settings for local dev vs production
 
 spring:
   datasource:

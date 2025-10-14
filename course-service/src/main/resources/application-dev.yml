@@ -1,0 +1,25 @@
+# Development Profile Configuration
+
+spring:
+  data:
+    mongodb:
+      # Development MongoDB (Docker container on port 27018)
+      uri: mongodb://admin:admin123@localhost:27018/elearning_courses_db?authSource=admin
+
+# Development logging - more verbose
+logging:
+  level:
+    root: INFO
+    com.elearning.course: DEBUG
+    org.springframework.data.mongodb: DEBUG
+    org.springframework.web: DEBUG # See all HTTP requests/responses
+  file:
+    name: logs/course-service-dev.log
+
+# Development server configuration
+server:
+  error:
+    include-message: always # Show error messages in response
+    include-binding-errors: always # Show validation errors
+    include-stacktrace: on_param # Show stacktrace with ?trace=true
+    include-exception: true # Include exception class name

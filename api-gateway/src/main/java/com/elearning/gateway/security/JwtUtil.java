@@ -16,13 +16,7 @@ import java.util.function.Function;
 /**
  * JWT Utility Service for API Gateway (REACTIVE VERSION)
  * 
- * REACTIVE NEDEN? 
- * - API Gateway Spring WebFlux kullanır (reactive)
- * - Tüm metotlar Mono<> veya Flux<> dönmeli
- * - Thread'ler beklemez, çok verimli!
- * 
  * Validates JWT tokens and extracts user information
- * Uses same secret key as User Service for token validation
  */
 @Component
 @Slf4j
@@ -33,18 +27,43 @@ public class JwtUtil {
 
     /**
      * Extract username (email) from JWT token
-     * 
-     * REACTIVE: Mono<String> döner
-     * Mono.fromCallable() = Blocking kodu reactive'e çevirir
      */
     public Mono<String> extractUsername(String token) {
         return Mono.fromCallable(() -> extractClaim(token, Claims::getSubject));
     }
 
     /**
+     * Extract role from JWT token
+     */
+    public Mono<String> extractRole(String token) {
+        return Mono.fromCallable(() -> {
+            Claims claims = extractAllClaims(token);
+            return claims.get("role", String.class);
+        });
+    }
+
+    /**
+     * Extract first name from JWT token
+     */
+    public Mono<String> extractFirstName(String token) {
+        return Mono.fromCallable(() -> {
+            Claims claims = extractAllClaims(token);
+            return claims.get("firstName", String.class);
+        });
+    }
+
+    /**
+     * Extract last name from JWT token
+     */
+    public Mono<String> extractLastName(String token) {
+        return Mono.fromCallable(() -> {
+            Claims claims = extractAllClaims(token);
+            return claims.get("lastName", String.class);
+        });
+    }
+
+    /**
      * Extract expiration date from JWT token
-     * 
-     * REACTIVE: Mono<Date> döner
      */
     public Mono<Date> extractExpiration(String token) {
         return Mono.fromCallable(() -> extractClaim(token, Claims::getExpiration));
@@ -52,9 +71,6 @@ public class JwtUtil {
 
     /**
      * Extract specific claim from JWT token
-     * 
-     * BLOCKING: Gerçek JWT işlemi (JJWT kütüphanesi blocking)
-     * Bu yüzden Mono.fromCallable() ile sarmalıyoruz
      */
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
@@ -63,8 +79,6 @@ public class JwtUtil {
 
     /**
      * Extract all claims from JWT token
-     * 
-     * BLOCKING: JJWT parser blocking çalışır
      */
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
@@ -76,8 +90,6 @@ public class JwtUtil {
 
     /**
      * Check if token is expired
-     * 
-     * BLOCKING: İç metot, Mono'ya sarmalamaya gerek yok
      */
     private Boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
@@ -85,11 +97,6 @@ public class JwtUtil {
 
     /**
      * Validate JWT token
-     * 
-     * REACTIVE: Mono<Boolean> döner
-     * - Token geçerliyse: Mono.just(true)
-     * - Token geçersizse: Mono.just(false)
-     * - Hata olursa: Exception yakala, Mono.just(false) dön
      */
     public Mono<Boolean> validateToken(String token) {
         return Mono.fromCallable(() -> {
@@ -104,8 +111,6 @@ public class JwtUtil {
 
     /**
      * Get signing key from secret
-     * 
-     * BLOCKING: Secret key oluşturma işlemi
      */
     private SecretKey getSignKey() {
         byte[] keyBytes = Base64.getDecoder().decode(secret);

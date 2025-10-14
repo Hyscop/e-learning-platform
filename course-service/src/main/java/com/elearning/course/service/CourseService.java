@@ -1,0 +1,184 @@
+package com.elearning.course.service;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
+import com.elearning.course.exception.CourseNotFoundException;
+import com.elearning.course.exception.UnauthorizedCourseAccessException;
+import com.elearning.course.model.Course;
+import com.elearning.course.model.CourseLevel;
+import com.elearning.course.repository.CourseRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Course Service
+ */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class CourseService {
+
+    private final CourseRepository courseRepository;
+
+    /**
+     * Create a new course
+     */
+    public Course createCourse(Course course) {
+        log.info("Creating a new course: {}", course.getTitle());
+
+        course.setEnrollmentCount(0);
+        course.setAverageRating(0.0);
+        course.setReviewCount(0);
+
+        Course savedCourse = courseRepository.save(course);
+        log.info("Course created successfully with id: {}", savedCourse.getId());
+
+        return savedCourse;
+
+    }
+
+    /**
+     * Get all courses
+     */
+    public List<Course> getAllCourses() {
+        log.info("Fetching all courses");
+        return courseRepository.findAll();
+    }
+
+    /**
+     * Get course by Id
+     */
+    public Course getCourseById(String id) {
+        log.debug("Fetching course with id: {}", id);
+        return courseRepository.findById(id)
+                .orElseThrow(() -> new CourseNotFoundException(id));
+    }
+
+    /**
+     * Get courses by instructor email
+     */
+    public List<Course> getCoursesByInstructor(String instructorEmail) {
+        log.debug("Fetching courses for instructor: {}", instructorEmail);
+        return courseRepository.findByInstructorEmail(instructorEmail);
+    }
+
+    /**
+     * Get courses by category
+     */
+    public List<Course> getCoursesByCategory(String category) {
+        log.debug("Fetching courses in category: {}", category);
+        return courseRepository.findByCategory(category);
+    }
+
+    /**
+     * Get courses by level
+     */
+    public List<Course> getCoursesByLevel(CourseLevel level) {
+        log.debug("Fetching courses with level: {}", level);
+        return courseRepository.findByLevel(level);
+    }
+
+    /**
+     * Get published courses only
+     */
+    public List<Course> getPublishedCourses() {
+        log.debug("Fetching published courses");
+        return courseRepository.findByIsPublishedTrue();
+    }
+
+    /**
+     * Search courses by title
+     */
+    public List<Course> searchCoursesByTitle(String title) {
+        log.debug("Searching courses with title containing: {}", title);
+        return courseRepository.findByTitleContainingIgnoreCase(title);
+    }
+
+    /**
+     * Update course
+     * Only the course owner instructor can update
+     */
+    public Course updateCourse(String id, Course updatedCourse, String instructorEmail) {
+        log.info("Updating course: {}", id);
+
+        Course course = courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException(id));
+
+        if (!course.getInstructorEmail().equals(instructorEmail)) {
+            log.error("Instructor {} not authorized to update course {}", instructorEmail, id);
+            throw new UnauthorizedCourseAccessException(id, instructorEmail);
+        }
+
+        course.setTitle(updatedCourse.getTitle());
+        course.setDescription(updatedCourse.getDescription());
+        course.setCategory(updatedCourse.getCategory());
+        course.setLevel(updatedCourse.getLevel());
+        course.setPrice(updatedCourse.getPrice());
+        course.setLanguage(updatedCourse.getLanguage());
+        course.setThumbnailUrl(updatedCourse.getThumbnailUrl());
+        course.setTags(updatedCourse.getTags());
+        course.setModules(updatedCourse.getModules());
+        course.setIsPublished(updatedCourse.getIsPublished());
+
+        Course saved = courseRepository.save(course);
+        log.info("Course updated successfully: {}", id);
+
+        return saved;
+    }
+
+    /**
+     * Delete course
+     * Only instructor can
+     */
+    public void deleteCourse(String id, String instructorEmail) {
+        log.info("Deleting course: {}", id);
+
+        Course course = courseRepository.findById(id).orElseThrow(() -> new CourseNotFoundException(id));
+
+        if (!course.getInstructorEmail().equals(instructorEmail)) {
+            log.error("Instructor {} not authorized to delete course {}", instructorEmail, id);
+            throw new UnauthorizedCourseAccessException(id, instructorEmail);
+        }
+
+        courseRepository.delete(course);
+        log.info("Course deleted successfully: {}", id);
+    }
+
+    /**
+     * Toggle publish status
+     */
+    public Course togglePublishStatus(String id, String instructorEmail) {
+        log.info("Toggling publish status for course: {}", id);
+
+        Course course = courseRepository.findById(id)
+                .orElseThrow(() -> new CourseNotFoundException(id));
+
+        // Check authorization
+        if (!course.getInstructorEmail().equals(instructorEmail)) {
+            throw new UnauthorizedCourseAccessException(id, instructorEmail);
+        }
+
+        course.setIsPublished(!course.getIsPublished());
+        Course updated = courseRepository.save(course);
+
+        log.info("Course publish status toggled to: {}", updated.getIsPublished());
+        return updated;
+    }
+
+    /**
+     * Check if course exists
+     */
+    public boolean existsById(String id) {
+        return courseRepository.existsById(id);
+    }
+
+    /**
+     * Get total course count
+     */
+    public long getTotalCourseCount() {
+        return courseRepository.count();
+    }
+
+}

@@ -14,7 +14,6 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * JWT Authentication Filter for API Gateway
@@ -26,34 +25,55 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Public endpoints that don't require authentication
     private static final List<String> PUBLIC_URLS = List.of(
+
+            // ==================== USER SERVICE ====================
+            // Public endpoints
             "/api/users/register",
             "/api/users/auth/login",
             "/api/users/auth/logout",
-            "/actuator"
-    );
+
+            // ==================== COURSE SERVICE ====================
+
+            "/api/courses/details/",
+            "/api/courses/published",
+            "/api/courses/category/",
+            "/api/courses/level/",
+            "/api/courses/search",
+            "/api/courses/instructor/",
+            "/api/courses/count",
+            "/api/courses/exists/",
+
+            // ==================== SYSTEM ====================
+            "/actuator");
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        
-        log.info("Processing request: {} {}", request.getMethod(), request.getURI().getPath());
+        String path = request.getURI().getPath();
+        String method = request.getMethod().toString();
 
-        // Skip JWT validation for public endpoints
-        if (isPublicEndpoint(request.getURI().getPath())) {
-            log.info("Public endpoint accessed: {}", request.getURI().getPath());
+        log.info("Processing request: {} {}", method, path);
+
+        if (path.equals("/api/courses") && "GET".equals(method)) {
+            log.info("Public endpoint accessed: GET {}", path);
+            return chain.filter(exchange);
+        }
+
+        // Skip JWT validation for other public endpoints
+        if (isPublicEndpoint(path)) {
+            log.info("Public endpoint accessed: {}", path);
             return chain.filter(exchange);
         }
 
         // Check if Authorization header exists
         if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-            log.error("Missing Authorization header");
+            log.error("Missing Authorization header for: {} {}", method, path);
             return onError(exchange, "Missing Authorization header", HttpStatus.UNAUTHORIZED);
         }
 
         String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-        
+
         // Validate Bearer token format
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             log.error("Invalid Authorization header format");
@@ -63,7 +83,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         String token = authHeader.substring(7);
 
         // REACTIVE JWT VALIDATION
-        // flatMap() = Mono içindeki değerle başka bir Mono işlemi yap
+
         return jwtUtil.validateToken(token)
                 .flatMap(isValid -> {
                     if (!isValid) {
@@ -73,16 +93,27 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
                     // Extract username reactively
                     return jwtUtil.extractUsername(token)
-                            .flatMap(username -> {
-                                log.info("JWT token validated successfully for user: {}", username);
+                            .flatMap(username -> jwtUtil.extractRole(token)
+                                    .flatMap(role -> jwtUtil.extractFirstName(token)
+                                            .flatMap(firstName -> jwtUtil.extractLastName(token)
+                                                    .flatMap(lastName -> {
+                                                        log.info(
+                                                                "JWT token validated successfully for user: {} ({} {}) with role: {}",
+                                                                username, firstName, lastName, role);
 
-                                // Add user information to request headers for downstream services
-                                ServerHttpRequest modifiedRequest = exchange.getRequest().mutate()
-                                        .header("X-User-Email", username)
-                                        .build();
+                                                        // Add user information to request headers for downstream
+                                                        // services
+                                                        ServerHttpRequest modifiedRequest = exchange.getRequest()
+                                                                .mutate()
+                                                                .header("X-User-Email", username)
+                                                                .header("X-User-Role", role)
+                                                                .header("X-User-FirstName", firstName)
+                                                                .header("X-User-LastName", lastName)
+                                                                .build();
 
-                                return chain.filter(exchange.mutate().request(modifiedRequest).build());
-                            });
+                                                        return chain.filter(
+                                                                exchange.mutate().request(modifiedRequest).build());
+                                                    }))));
                 })
                 .onErrorResume(e -> {
                     // Catch any errors and return 401
@@ -93,10 +124,20 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
     /**
      * Check if the request path is a public endpoint
+     * Uses exact match OR startsWith for paths ending with '/'
      */
     private boolean isPublicEndpoint(String path) {
         return PUBLIC_URLS.stream()
-                .anyMatch(path::startsWith);
+                .anyMatch(publicUrl -> {
+                    // If public URL ends with '/', it's a prefix match (e.g.,
+                    // "/api/courses/details/")
+                    if (publicUrl.endsWith("/")) {
+                        return path.startsWith(publicUrl);
+                    }
+                    // Otherwise, exact match only (e.g., "/api/courses/published")
+                    // BUT also allow with trailing slash
+                    return path.equals(publicUrl) || path.equals(publicUrl + "/");
+                });
     }
 
     /**
@@ -106,16 +147,15 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(status);
         response.getHeaders().add("Content-Type", "application/json");
-        
+
         String errorResponse = String.format(
                 "{\"timestamp\":\"%s\",\"status\":%d,\"error\":\"%s\",\"message\":\"%s\",\"path\":\"%s\"}",
                 java.time.LocalDateTime.now(),
                 status.value(),
                 status.getReasonPhrase(),
                 message,
-                exchange.getRequest().getURI().getPath()
-        );
-        
+                exchange.getRequest().getURI().getPath());
+
         return response.writeWith(Mono.just(response.bufferFactory().wrap(errorResponse.getBytes())));
     }
 

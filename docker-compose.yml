@@ -32,6 +32,30 @@ services:
       retries: 5
 
   # ===================================
+  # DATABASE: MongoDB for Course Service
+  # ===================================
+  mongodb:
+    image: mongo:7-jammy # MongoDB 7 on Ubuntu Jammy
+    container_name: elearning-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: elearning_courses_db
+    ports:
+      - "27018:27017" # Host:Container - avoid conflict with existing MongoDB on 27017
+    volumes:
+      # Persist MongoDB data
+      - mongodb-data:/data/db
+    networks:
+      - elearning-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===================================
   # API GATEWAY
   # ===================================
   api-gateway:
@@ -45,7 +69,7 @@ services:
       # Route to user service
       SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://user-service:8081
       # JWT secret (must match user-service)
-      JWT_SECRET: dGhpc2lzYXZlcnlzZWN1cmVzZWNyZXRrZXlmb3Jqd3R0b2tlbmdlbmVyYXRpb25taW5pbXVtMjU2Yml0cw==
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
     depends_on:
       - user-service # Wait for user service to be ready
     networks:
@@ -80,6 +104,29 @@ services:
     # volumes:
     #   - ./user-service/src:/app/src
 
+  # ===================================
+  # COURSE SERVICE
+  # ===================================
+  course-service:
+    build:
+      context: . # Build from root (needs parent POM)
+      dockerfile: course-service/Dockerfile
+    container_name: elearning-course-service
+    ports:
+      - "8082:8082" # Expose to host machine
+    environment:
+      # Override application.yml settings
+      SPRING_PROFILES_ACTIVE: dev # Use application-dev.yml
+      SPRING_DATA_MONGODB_URI: mongodb://admin:admin123@mongodb:27017/elearning_courses_db?authSource=admin
+      # WHY mongodb as hostname? Docker network service discovery
+      # Note: Inside Docker network, MongoDB still uses port 27017
+    depends_on:
+      mongodb:
+        condition: service_healthy # Wait for MongoDB to be ready
+    networks:
+      - elearning-network
+    restart: unless-stopped
+
 # ===================================
 # NETWORKS
 # ===================================
@@ -95,6 +142,9 @@ volumes:
   postgres-data:
     # Named volume - managed by Docker
     # WHY? Data persists even if container is deleted
+    driver: local
+  mongodb-data:
+    # MongoDB data persistence
     driver: local
 # ===================================
 # FUTURE SERVICES (commented out)

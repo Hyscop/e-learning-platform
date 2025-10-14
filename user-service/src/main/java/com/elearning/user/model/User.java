@@ -1,11 +1,9 @@
 package com.elearning.user.model;
 
-
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.cglib.core.Local;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,12 +17,12 @@ import lombok.NoArgsConstructor;
  * This class maps to the "users" table in POSTGRESQL database.
  */
 
- @Entity
- @Table(name = "users")
- @Data
- @NoArgsConstructor
- @AllArgsConstructor
- @Builder
+@Entity
+@Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 
 public class User {
 
@@ -44,8 +42,7 @@ public class User {
     @Column(unique = true, nullable = false, length = 100)
     private String email;
 
-
-    /** 
+    /**
      * Password - Stored encrypted (BCrypt hashing)
      */
     @Column(nullable = false)
@@ -91,5 +88,4 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
-    
 }

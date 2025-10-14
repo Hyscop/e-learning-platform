@@ -1,0 +1,45 @@
+# Course Service Configuration
+
+spring:
+  application:
+    name: course-service
+
+  # Profile Configuration
+  profiles:
+    active: dev # Use development profile by default
+
+  # MongoDB Configuration
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123@localhost:27018/elearning_courses_db?authSource=admin
+
+# Server Configuration
+server:
+  port: 8082 # User Service: 8081, Gateway: 8080, Course Service: 8082
+  servlet:
+    context-path: /api/courses # Base path for all endpoints (like User Service)
+  error:
+    include-message: always # Show error messages in response
+    include-stacktrace: on_param # Show stacktrace with ?trace=true
+
+# Actuator Configuration - Health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.elearning.course: DEBUG
+    org.springframework.data.mongodb: DEBUG # To see MongoDB queries
+  file:
+    name: logs/course-service.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

@@ -6,13 +6,22 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 /**
  * API Gateway Application
  * 
- * Entry point for all client requests to the E-Learning Platform
- * Handles routing, JWT validation, and request filtering
  */
 @SpringBootApplication
 public class ApiGatewayApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(ApiGatewayApplication.class, args);
+
+        System.out.println("""
+
+                ========================================
+                🚀 API Gateway Started Successfully!
+                ========================================
+                📍 Port: 8080
+                🔗 Base URL: http://localhost:8080/api/
+                💚 Health: http://localhost:8080/actuator/health
+                ========================================
+                """);
     }
 }

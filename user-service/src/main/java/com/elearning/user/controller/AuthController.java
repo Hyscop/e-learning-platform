@@ -12,9 +12,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Authentication Controller
@@ -62,8 +64,12 @@ public class AuthController {
             User user = userService.getUserByEmail(authRequest.getEmail())
                     .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-            // Generate JWT token
-            String token = jwtService.generateToken(user.getEmail());
+            // Generate JWT token with user claims (role, firstName, lastName)
+            Map<String, Object> claims = new HashMap<>();
+            claims.put("role", user.getRole().toString());
+            claims.put("firstName", user.getFirstName());
+            claims.put("lastName", user.getLastName());
+            String token = jwtService.generateToken(claims, user.getEmail());
 
             // Build response
             AuthResponse response = AuthResponse.builder()

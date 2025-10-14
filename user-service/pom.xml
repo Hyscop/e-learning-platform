@@ -5,10 +5,6 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- 
-        USER SERVICE POM
-        Inherits from parent POM - gets common dependencies & versions
-    -->
     
     <parent>
         <groupId>com.elearning</groupId>
@@ -21,57 +17,38 @@
     <description>User management, authentication and authorization service</description>
 
     <dependencies>
-        <!-- 
-            SPRING BOOT WEB - REST APIs, embedded Tomcat
-            WHY? This is a RESTful microservice
-        -->
+    
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- 
-            SPRING DATA JPA - Database access with JPA/Hibernate
-            WHY? Object-Relational Mapping, reduces boilerplate SQL
-        -->
+      
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- 
-            POSTGRESQL DRIVER
-            WHY? User Service uses PostgreSQL (relational data)
-            Note: Version comes from parent POM dependencyManagement
-        -->
+   
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- 
-            SPRING VALIDATION - Bean validation (@NotNull, @Email, etc.)
-            WHY? Validate incoming requests before processing
-        -->
+       
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!-- 
-            SPRING SECURITY - Authentication & Authorization
-            WHY? Secure endpoints, password encoding
-        -->
+      
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
-        <!-- 
-            JWT LIBRARIES - Token generation and validation
-            WHY? Stateless authentication across microservices
-        -->
+      
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -87,28 +64,19 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- 
-            SPRING BOOT ACTUATOR - Health checks, metrics
-            WHY? Monitor service health, expose metrics for Prometheus later
-        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- 
-            H2 DATABASE - In-memory database for testing
-            WHY? Fast unit/integration tests without PostgreSQL
-        -->
+     
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- 
-            SPRING SECURITY TEST - Test security configurations
-        -->
+      
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
@@ -118,7 +86,7 @@
 
     <build>
         <plugins>
-            <!-- Spring Boot Plugin - creates executable JAR -->
+         
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
