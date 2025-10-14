@@ -187,13 +187,13 @@ public class CourseService {
      */
     public void incrementEnrollmentCount(String courseId) {
         log.info("Incrementing enrollment count for course: {}", courseId);
-        
+
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException(courseId));
-        
+
         Integer currentCount = course.getEnrollmentCount();
         course.setEnrollmentCount(currentCount == null ? 1 : currentCount + 1);
-        
+
         courseRepository.save(course);
         log.info("Enrollment count for course {} incremented to: {}", courseId, course.getEnrollmentCount());
     }
@@ -204,10 +204,10 @@ public class CourseService {
      */
     public void decrementEnrollmentCount(String courseId) {
         log.info("Decrementing enrollment count for course: {}", courseId);
-        
+
         Course course = courseRepository.findById(courseId)
                 .orElseThrow(() -> new CourseNotFoundException(courseId));
-        
+
         Integer currentCount = course.getEnrollmentCount();
         if (currentCount != null && currentCount > 0) {
             course.setEnrollmentCount(currentCount - 1);
@@ -215,9 +215,57 @@ public class CourseService {
             log.warn("Enrollment count for course {} is already 0 or null", courseId);
             course.setEnrollmentCount(0);
         }
-        
+
         courseRepository.save(course);
         log.info("Enrollment count for course {} decremented to: {}", courseId, course.getEnrollmentCount());
+    }
+
+    /**
+     * Get total lesson count across all modules
+     * Called by Progress Service to calculate completion percentage
+     */
+    public int getTotalLessonCount(String courseId) {
+        log.info("Getting total lesson count for course: {}", courseId);
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException(courseId));
+
+        int totalLessons = course.getModules().stream()
+                .mapToInt(module -> module.getLessons() != null ? module.getLessons().size() : 0)
+                .sum();
+
+        log.info("Course {} has {} total lessons", courseId, totalLessons);
+        return totalLessons;
+    }
+
+    /**
+     * Get specific lesson details by module and lesson index
+     * Called by Progress Service to denormalize lesson title and duration
+     */
+    public com.elearning.course.dto.LessonDetailsDTO getLessonDetails(String courseId, int moduleIndex,
+            int lessonIndex) {
+        log.info("Getting lesson details for course: {}, module: {}, lesson: {}",
+                courseId, moduleIndex, lessonIndex);
+
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException(courseId));
+
+        if (course.getModules() == null || moduleIndex >= course.getModules().size()) {
+            throw new IllegalArgumentException("Module index " + moduleIndex + " not found in course");
+        }
+
+        var module = course.getModules().get(moduleIndex);
+
+        if (module.getLessons() == null || lessonIndex >= module.getLessons().size()) {
+            throw new IllegalArgumentException("Lesson index " + lessonIndex + " not found in module " + moduleIndex);
+        }
+
+        var lesson = module.getLessons().get(lessonIndex);
+
+        return com.elearning.course.dto.LessonDetailsDTO.builder()
+                .title(lesson.getTitle())
+                .duration(lesson.getDuration())
+                .build();
     }
 
 }

@@ -1,0 +1,80 @@
+# Progress Service Configuration
+
+spring:
+  application:
+    name: progress-service
+
+  # Profile Configuration
+  profiles:
+    active: dev # Use development profile by default
+
+  # MongoDB & Redis Configuration
+  data:
+    mongodb:
+      uri: mongodb://admin:admin123@localhost:27018/elearning_progress_db?authSource=admin
+      # Database: elearning_progress_db (separate from courses and enrollments DB)
+      # Same MongoDB instance, different database
+      auto-index-creation: true # Auto-create indexes defined in @CompoundIndex
+    redis:
+      host: localhost
+      port: 6379
+      password: # No password for local dev
+      timeout: 60000 # Connection timeout in milliseconds
+      lettuce:
+        pool:
+          max-active: 8 # Maximum number of connections
+          max-idle: 8 # Maximum idle connections
+          min-idle: 0 # Minimum idle connections
+          max-wait: -1ms # Maximum wait time for connection
+
+  # Cache Configuration
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000 # Cache TTL: 10 minutes (in milliseconds)
+      cache-null-values: false # Don't cache null values
+      use-key-prefix: true # Add prefix to cache keys
+
+# Server Configuration
+server:
+  port: 8084 # User: 8081, Gateway: 8080, Course: 8082, Enrollment: 8083, Progress: 8084
+  servlet:
+    context-path: /api/progress # Base path for all endpoints
+  error:
+    include-message: always # Show error messages in response
+    include-stacktrace: on_param # Show stacktrace with ?trace=true
+
+# Actuator Configuration - Health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.elearning.progress: DEBUG
+    org.springframework.data.mongodb: DEBUG # To see MongoDB queries
+  file:
+    name: logs/progress-service.log
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# JWT Configuration (same secret as other services)
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+
+# Service-to-Service Communication URLs
+enrollment:
+  service:
+    url: http://enrollment-service:8083
+
+course:
+  service:
+    url: http://course-service:8082

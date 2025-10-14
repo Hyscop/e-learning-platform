@@ -1,5 +1,5 @@
 # ====================================
-# Dockerfile for Enrollment Service
+# Dockerfile for Progress Service
 # ====================================
 # Multi-stage build:
 # Stage 1: Build with Maven
@@ -20,10 +20,10 @@ COPY progress-service/pom.xml ./progress-service/
 COPY api-gateway/pom.xml ./api-gateway/
 
 # Copy only this service's source code
-COPY enrollment-service/src ./enrollment-service/src
+COPY progress-service/src ./progress-service/src
 
 # Build the application
-RUN mvn clean package -DskipTests -pl enrollment-service -am
+RUN mvn clean package -DskipTests -pl progress-service -am
 
 # ===== RUNTIME STAGE =====
 FROM eclipse-temurin:21-jre-alpine
@@ -36,14 +36,14 @@ RUN addgroup -S spring && adduser -S spring -G spring
 USER spring:spring
 
 # Copy JAR from build stage
-COPY --from=build /app/enrollment-service/target/*.jar app.jar
+COPY --from=build /app/progress-service/target/*.jar app.jar
 
 # Expose port
-EXPOSE 8083
+EXPOSE 8084
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
-  CMD wget --quiet --tries=1 --spider http://localhost:8083/api/enrollments/actuator/health || exit 1
+  CMD wget --quiet --tries=1 --spider http://localhost:8084/api/progress/actuator/health || exit 1
 
 # Run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -59,6 +59,16 @@ public class EnrollmentController {
         return ResponseEntity.ok(enrollments);
     }
 
+    @GetMapping("/{enrollmentId}")
+    public ResponseEntity<EnrollmentResponse> getEnrollmentById(@PathVariable String enrollmentId) {
+        log.info("Fetching enrollment by ID: {}", enrollmentId);
+
+        Enrollment enrollment = enrollmentService.getEnrollmentById(enrollmentId);
+        EnrollmentResponse response = EnrollmentResponse.fromEntity(enrollment);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/course/{courseId}")
     public ResponseEntity<List<EnrollmentResponse>> getCourseEnrollments(@PathVariable String courseId) {
         log.info("Fetching enrollments for course '{}'", courseId);

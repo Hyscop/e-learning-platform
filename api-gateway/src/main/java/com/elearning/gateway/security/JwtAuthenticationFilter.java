@@ -69,6 +69,25 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             return chain.filter(exchange);
         }
 
+        // Allow service-to-service calls for lesson metadata (Progress Service calling
+        // Course Service)
+        // Pattern: /api/courses/{id}/lesson-count or
+        // /api/courses/{id}/modules/{moduleIndex}/lessons/{lessonIndex}
+        if (path.matches("/api/courses/[a-f0-9]{24}/lesson-count") ||
+                path.matches("/api/courses/[a-f0-9]{24}/modules/\\d+/lessons/\\d+")) {
+            log.info("Service-to-service endpoint accessed: {}", path);
+            return chain.filter(exchange);
+        }
+
+        // Allow service-to-service calls for enrollment details (Progress Service
+        // calling Enrollment Service)
+        // Pattern: /api/enrollments/{mongodbId} - only match MongoDB ObjectId format
+        // (24 hex characters)
+        if (path.matches("/api/enrollments/[a-f0-9]{24}") && "GET".equals(method)) {
+            log.info("Service-to-service endpoint accessed: GET {}", path);
+            return chain.filter(exchange);
+        }
+
         // Check if Authorization header exists
         if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
             log.error("Missing Authorization header for: {} {}", method, path);

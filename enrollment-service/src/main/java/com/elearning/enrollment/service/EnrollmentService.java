@@ -53,6 +53,9 @@ public class EnrollmentService {
         log.info("Successfully enrolled student '{}' in course '{}' with enrollment ID '{}'",
                 studentEmail, courseId, saved.getId());
 
+        // TODO: Phase 2 - Replace with RabbitMQ event publishing (StudentEnrolledEvent)
+        // This synchronous REST call should be replaced with async event-driven
+        // architecture
         try {
             courseServiceClient.incrementEnrollmentCount(courseId);
             log.info("Incremented enrollment count for course '{}'", courseId);
@@ -69,6 +72,16 @@ public class EnrollmentService {
         List<Enrollment> enrollments = enrollmentRepository.findByStudentEmail(studentEmail);
         log.debug("Found {} enrollments for student '{}'", enrollments.size(), studentEmail);
         return enrollments;
+    }
+
+    @Cacheable(value = "enrollments", key = "'enrollment:' + #enrollmentId")
+    public Enrollment getEnrollmentById(String enrollmentId) {
+        log.debug("Fetching enrollment by ID: {}", enrollmentId);
+        return enrollmentRepository.findById(enrollmentId)
+                .orElseThrow(() -> {
+                    log.error("Enrollment not found with ID: {}", enrollmentId);
+                    return new EnrollmentNotFoundException(enrollmentId);
+                });
     }
 
     @Cacheable(value = "enrollments", key = "'course:' + #courseId")
@@ -101,6 +114,7 @@ public class EnrollmentService {
             enrollment.setStatus(EnrollmentStatus.COMPLETED);
             enrollment.setCompletionDate(LocalDateTime.now());
             log.info("Student '{}' completed course '{}'", studentEmail, courseId);
+            // TODO: Phase 2 - Publish CourseCompletedEvent for certificate generation
         }
 
         Enrollment updated = enrollmentRepository.save(enrollment);
@@ -122,6 +136,9 @@ public class EnrollmentService {
         enrollment.setStatus(EnrollmentStatus.DROPPED);
         enrollmentRepository.save(enrollment);
 
+        // TODO: Phase 2 - Replace with RabbitMQ event publishing (StudentDroppedEvent)
+        // This synchronous REST call should be replaced with async event-driven
+        // architecture
         try {
             courseServiceClient.decrementEnrollmentCount(courseId);
             log.info("Decremented enrollment count for course '{}'", courseId);

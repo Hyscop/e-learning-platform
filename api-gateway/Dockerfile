@@ -2,16 +2,22 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# Copy parent pom and api-gateway pom
+# Install Maven
+RUN apk add --no-cache maven
+
+# Copy parent POM and ALL module POMs
 COPY pom.xml ./
+COPY user-service/pom.xml ./user-service/
+COPY course-service/pom.xml ./course-service/
+COPY enrollment-service/pom.xml ./enrollment-service/
+COPY progress-service/pom.xml ./progress-service/
 COPY api-gateway/pom.xml ./api-gateway/
 
-# Copy source code
+# Copy only this service's source code
 COPY api-gateway/src ./api-gateway/src
 
 # Build the application
-RUN apk add --no-cache maven
-RUN mvn -f api-gateway/pom.xml clean package -DskipTests
+RUN mvn clean package -DskipTests -pl api-gateway -am
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine

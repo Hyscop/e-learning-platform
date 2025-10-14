@@ -7,14 +7,15 @@ FROM maven:3.9-eclipse-temurin-21-alpine AS build
 # Set working directory inside container
 WORKDIR /app
 
-# OPTIMIZATION: Copy only POM files first
+# Copy parent POM and ALL module POMs
 COPY pom.xml .
+COPY user-service/pom.xml user-service/
 COPY course-service/pom.xml course-service/
+COPY enrollment-service/pom.xml enrollment-service/
+COPY progress-service/pom.xml progress-service/
+COPY api-gateway/pom.xml api-gateway/
 
-# Download dependencies (cached if POMs unchanged)
-RUN mvn dependency:go-offline -B
-
-# Copy source code
+# Copy only this service's source code
 COPY course-service/src course-service/src
 
 # Build the application

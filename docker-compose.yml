@@ -88,12 +88,13 @@ services:
     ports:
       - "8080:8080" # Main entry point for all API requests
     environment:
-      # Route to user service
-      SPRING_CLOUD_GATEWAY_ROUTES_0_URI: http://user-service:8081
       # JWT secret (must match user-service)
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
     depends_on:
       - user-service # Wait for user service to be ready
+      - course-service
+      - enrollment-service
+      - progress-service
     networks:
       - elearning-network
     restart: unless-stopped
@@ -163,6 +164,32 @@ services:
       # Override application.yml settings
       SPRING_PROFILES_ACTIVE: dev # Use application-dev.yml
       SPRING_DATA_MONGODB_URI: mongodb://admin:admin123@mongodb:27017/elearning_enrollments_db?authSource=admin
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # WHY redis/mongodb as hostname? Docker network service discovery
+    depends_on:
+      mongodb:
+        condition: service_healthy # Wait for MongoDB to be ready
+      redis:
+        condition: service_healthy # Wait for Redis to be ready
+    networks:
+      - elearning-network
+    restart: unless-stopped
+
+  # ===================================
+  # PROGRESS SERVICE
+  # ===================================
+  progress-service:
+    build:
+      context: . # Build from root (needs parent POM)
+      dockerfile: progress-service/Dockerfile
+    container_name: elearning-progress-service
+    ports:
+      - "8084:8084" # Expose to host machine
+    environment:
+      # Override application.yml settings
+      SPRING_PROFILES_ACTIVE: dev # Use application-dev.yml
+      SPRING_DATA_MONGODB_URI: mongodb://admin:admin123@mongodb:27017/elearning_progress_db?authSource=admin
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       # WHY redis/mongodb as hostname? Docker network service discovery

@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.elearning.course.dto.LessonDetailsDTO;
 import com.elearning.course.model.Course;
 import com.elearning.course.model.CourseLevel;
 import com.elearning.course.service.CourseService;
@@ -41,7 +42,7 @@ public class CourseController {
             @RequestHeader("X-User-FirstName") String firstName,
             @RequestHeader("X-User-LastName") String lastName) {
 
-        log.info("Create course request received from user: {} {} ({}) with role: {}", 
+        log.info("Create course request received from user: {} {} ({}) with role: {}",
                 firstName, lastName, userEmail, userRole);
 
         // Validate role - only INSTRUCTOR and ADMIN can create courses
@@ -57,7 +58,7 @@ public class CourseController {
 
         Course created = courseService.createCourse(course);
 
-        log.info("Course created successfully with ID: {} by instructor: {} {}", 
+        log.info("Course created successfully with ID: {} by instructor: {} {}",
                 created.getId(), firstName, lastName);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
@@ -280,5 +281,20 @@ public class CourseController {
         log.info("Decrement enrollment count request for course: {}", id);
         courseService.decrementEnrollmentCount(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{courseId}/lesson-count")
+    public ResponseEntity<Integer> getLessonCount(@PathVariable String courseId) {
+        int count = courseService.getTotalLessonCount(courseId);
+        return ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/{courseId}/modules/{moduleIndex}/lessons/{lessonIndex}")
+    public ResponseEntity<LessonDetailsDTO> getLessonDetails(
+            @PathVariable String courseId,
+            @PathVariable int moduleIndex,
+            @PathVariable int lessonIndex) {
+        LessonDetailsDTO lesson = courseService.getLessonDetails(courseId, moduleIndex, lessonIndex);
+        return ResponseEntity.ok(lesson);
     }
 }

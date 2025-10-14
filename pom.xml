@@ -21,6 +21,7 @@
         <module>api-gateway</module>
         <module>course-service</module>
         <module>enrollment-service</module>
+        <module>progress-service</module>
         <!-- Add more services here as we create them -->
        
     </modules>

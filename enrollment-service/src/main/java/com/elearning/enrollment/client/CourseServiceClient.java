@@ -16,6 +16,10 @@ public class CourseServiceClient {
     @Value("${course.service.url:http://localhost:8082}")
     private String courseServiceUrl;
 
+    // TODO: Phase 2 - This entire class should be replaced with RabbitMQ event
+    // publishing
+    // Instead of synchronous REST calls, publish events to a message queue
+
     public String getCourseTitle(String courseId) {
         try {
             log.debug("Fetching course title for courseId: {}", courseId);
