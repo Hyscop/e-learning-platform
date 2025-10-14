@@ -44,6 +44,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             "/api/courses/count",
             "/api/courses/exists/",
 
+            // ==================== ENROLLMENT SERVICE ====================
+            "/api/enrollments/course/",
+
             // ==================== SYSTEM ====================
             "/actuator");
 

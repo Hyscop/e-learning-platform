@@ -181,4 +181,43 @@ public class CourseService {
         return courseRepository.count();
     }
 
+    /**
+     * Increment enrollment count
+     * Called when student enrolls in course
+     */
+    public void incrementEnrollmentCount(String courseId) {
+        log.info("Incrementing enrollment count for course: {}", courseId);
+        
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException(courseId));
+        
+        Integer currentCount = course.getEnrollmentCount();
+        course.setEnrollmentCount(currentCount == null ? 1 : currentCount + 1);
+        
+        courseRepository.save(course);
+        log.info("Enrollment count for course {} incremented to: {}", courseId, course.getEnrollmentCount());
+    }
+
+    /**
+     * Decrement enrollment count
+     * Called when student drops enrollment
+     */
+    public void decrementEnrollmentCount(String courseId) {
+        log.info("Decrementing enrollment count for course: {}", courseId);
+        
+        Course course = courseRepository.findById(courseId)
+                .orElseThrow(() -> new CourseNotFoundException(courseId));
+        
+        Integer currentCount = course.getEnrollmentCount();
+        if (currentCount != null && currentCount > 0) {
+            course.setEnrollmentCount(currentCount - 1);
+        } else {
+            log.warn("Enrollment count for course {} is already 0 or null", courseId);
+            course.setEnrollmentCount(0);
+        }
+        
+        courseRepository.save(course);
+        log.info("Enrollment count for course {} decremented to: {}", courseId, course.getEnrollmentCount());
+    }
+
 }

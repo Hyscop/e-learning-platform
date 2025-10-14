@@ -56,6 +56,28 @@ services:
     restart: unless-stopped
 
   # ===================================
+  # CACHE: Redis for Enrollment Service
+  # ===================================
+  redis:
+    image: redis:7-alpine # Redis 7 on Alpine (lightweight)
+    container_name: elearning-redis
+    ports:
+      - "6379:6379" # Default Redis port
+    volumes:
+      # Persist Redis data (optional - cache can be rebuilt)
+      - redis-data:/data
+    networks:
+      - elearning-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    # Optional: Add Redis configuration
+    # command: redis-server --appendonly yes --requirepass yourpassword
+
+  # ===================================
   # API GATEWAY
   # ===================================
   api-gateway:
@@ -127,6 +149,32 @@ services:
       - elearning-network
     restart: unless-stopped
 
+  # ===================================
+  # ENROLLMENT SERVICE
+  # ===================================
+  enrollment-service:
+    build:
+      context: . # Build from root (needs parent POM)
+      dockerfile: enrollment-service/Dockerfile
+    container_name: elearning-enrollment-service
+    ports:
+      - "8083:8083" # Expose to host machine
+    environment:
+      # Override application.yml settings
+      SPRING_PROFILES_ACTIVE: dev # Use application-dev.yml
+      SPRING_DATA_MONGODB_URI: mongodb://admin:admin123@mongodb:27017/elearning_enrollments_db?authSource=admin
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # WHY redis/mongodb as hostname? Docker network service discovery
+    depends_on:
+      mongodb:
+        condition: service_healthy # Wait for MongoDB to be ready
+      redis:
+        condition: service_healthy # Wait for Redis to be ready
+    networks:
+      - elearning-network
+    restart: unless-stopped
+
 # ===================================
 # NETWORKS
 # ===================================
@@ -145,6 +193,9 @@ volumes:
     driver: local
   mongodb-data:
     # MongoDB data persistence
+    driver: local
+  redis-data:
+    # Redis data persistence (optional for cache)
     driver: local
 # ===================================
 # FUTURE SERVICES (commented out)

@@ -255,4 +255,30 @@ public class CourseController {
         log.info("Total courses in system: {}", count);
         return ResponseEntity.ok(count);
     }
+
+    // ==================== Enrollment Count Operations ====================
+
+    /**
+     * Increment enrollment count
+     * POST /api/courses/{id}/enrollment/increment
+     * Called by Enrollment Service when student enrolls
+     */
+    @PostMapping("/{id}/enrollment/increment")
+    public ResponseEntity<Void> incrementEnrollmentCount(@PathVariable String id) {
+        log.info("Increment enrollment count request for course: {}", id);
+        courseService.incrementEnrollmentCount(id);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Decrement enrollment count
+     * POST /api/courses/{id}/enrollment/decrement
+     * Called by Enrollment Service when student drops enrollment
+     */
+    @PostMapping("/{id}/enrollment/decrement")
+    public ResponseEntity<Void> decrementEnrollmentCount(@PathVariable String id) {
+        log.info("Decrement enrollment count request for course: {}", id);
+        courseService.decrementEnrollmentCount(id);
+        return ResponseEntity.ok().build();
+    }
 }
